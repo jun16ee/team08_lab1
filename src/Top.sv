@@ -14,9 +14,17 @@ logic [3:0] o_random_out_r, o_random_out_w;
 
 // ===== Registers & Wires =====
 logic state_r, state_w;
+logic clk_en;
 
 // ===== Output Assignments =====
 assign o_random_out = o_random_out_r;
+
+// ===== Sub-Module Instantiation =====
+clk_counter u_clk_counter (
+	.i_clk   (i_clk),
+	.i_rst_n (i_rst_n),
+	.o_clk_en(clk_en)
+);
 
 // ===== Combinational Circuits =====
 always_comb begin
@@ -29,14 +37,16 @@ always_comb begin
 	S_IDLE: begin
 		if (i_start) begin
 			state_w = S_PROC;
-			o_random_out_w = 4'd15;
+			o_random_out_w = 4'd1;
 		end
 	end
 
 	S_PROC: begin
-		if (i_start) begin
-			state_w = (o_random_out_r == 4'd10) ? S_IDLE : state_w;
-			o_random_out_w = (o_random_out_r == 4'd10) ? 4'd1 : (o_random_out_r - 4'd1);
+		if (o_random_out_r == 4'd10) begin
+			state_w = S_IDLE;
+			o_random_out_w = 4'd0;
+		end else if (clk_en) begin
+			o_random_out_w = o_random_out_r + 4'd1;
 		end
 	end
 
