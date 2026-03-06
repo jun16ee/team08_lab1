@@ -57,3 +57,29 @@ always_ff @(posedge i_clk or negedge i_rst_n) begin
 end
 
 endmodule
+
+module clk_counter(
+	input logic i_clk,
+	input logic i_rst_n,
+	output logic o_clk_en
+);
+	reg[17:0] counter;
+	
+	always_ff @(posedge i_clk or negedge i_rst_n) begin
+		// reset
+		if (!i_rst_n) begin
+			counter <= 18'd0;
+			o_clk_en <= 1'b0;
+		end
+		else begin
+			if (counter == 18'd99999) begin
+				o_clk_en <= 1'b1;
+				counter <= 18'd0;
+			end else begin
+				o_clk_en <= 1'b0;
+				counter <= counter + 1'b1;
+			end
+		end
+	end
+
+endmodule
