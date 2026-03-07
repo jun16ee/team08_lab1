@@ -5,67 +5,37 @@ module Top (
 	output [3:0] o_random_out
 );
 
-// ===== States =====
-parameter S_IDLE = 1'b0;
-parameter S_PROC = 1'b1;
-
-// ===== Registers & Wires =====
-logic state_r, state_w;
-logic clk_en;
-logic lfsr_en;
+// ===== Wires =====
+logic tick_en;
+logic update_en;
 logic [15:0] time_seed;
-logic lfsr_load;
-
-assign lfsr_load = (state_r == S_IDLE) && i_start;
-assign lfsr_en = (state_r == S_PROC) && clk_en;
+logic is_finished;
 
 // ===== Sub-Module Instantiation =====
 clk_counter u_clk_counter (
-	.i_clk   (i_clk),
-	.i_rst_n (i_rst_n),
-	.o_clk_en(clk_en),
-	.o_time_seed (time_seed)
+    .i_clk       (i_clk),
+    .i_rst_n     (i_rst_n),
+    .o_clk_en    (tick_en),
+    .o_time_seed (time_seed)
+);
+
+speed_controller u_speed_controller (
+    .i_clk       (i_clk),
+    .i_rst_n     (i_rst_n),
+    .i_start     (i_start),
+    .i_tick      (tick_en),
+    .o_update_en (update_en),
+    .o_finished  (is_finished)
 );
 
 lfsr_random_gen u_lfsr_random_gen (
-	.i_clk   (i_clk),
-	.i_rst_n (i_rst_n),
-	.i_en    (lfsr_en),
-	.i_load  (lfsr_load),
+    .i_clk   (i_clk),
+    .i_rst_n (i_rst_n),
+    .i_en    (update_en),
+    .i_load  (i_start),
     .i_seed  (time_seed),
-	.o_rand  (o_random_out)
+    .o_rand  (o_random_out)
 );
-
-// ===== Combinational Circuits =====
-always_comb begin
-	// Default Values
-	state_w        = state_r;
-
-	// FSM
-	case(state_r)
-		S_IDLE: begin
-			if (i_start) begin
-				state_w = S_PROC;
-			end
-		end
-
-		S_PROC: begin
-			
-		end
-
-	endcase
-end
-
-// ===== Sequential Circuits =====
-always_ff @(posedge i_clk or negedge i_rst_n) begin
-	// reset
-	if (!i_rst_n) begin
-		state_r        <= S_IDLE;
-	end
-	else begin
-		state_r        <= state_w;
-	end
-end
 
 endmodule
 
