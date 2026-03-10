@@ -43,18 +43,19 @@ lfsr_random_gen u_lfsr_random_gen (
 
 assign o_random_out = show?old_num:random_out_now;
 
-logic done_r;
-always_ff @(posedge i_clk) begin
-    if (!i_rst_n) begin
-        old_num <= 18'd0;
-        done_r <= 1'b0;
-    end else begin
-        done_r <= done;
-        if (done_r & ~done) begin //falling edge
-            old_num <= random_out_now;
-        end
-    end
-end
+assign old_num = 4'b1010;
+// logic done_r;
+// always_ff @(posedge i_clk) begin
+//     if (!i_rst_n) begin
+//         old_num <= 18'd0;
+//         done_r <= 1'b0;
+//     end else begin
+//         done_r <= done;
+//         if (done_r & ~done) begin //falling edge
+//             old_num <= random_out_now;
+//         end
+//     end
+// end
 
 endmodule
 
