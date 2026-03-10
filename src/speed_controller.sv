@@ -7,16 +7,19 @@ module speed_controller (
     input  logic i_clk,
     input  logic i_rst_n,
     input  logic i_start,
+    input  logic i_show,
     input  logic i_tick,
     output logic o_update_en,
-    output logic o_finished
+    output logic o_finished,
+    output logic o_show
 );
 
     // ===== State Definitions =====
     typedef enum logic [1:0] {
         S_IDLE,
         S_RUN,
-        S_DONE
+        S_DONE,
+        S_SHOW
     } state_t;
 
     state_t state_r, state_w;
@@ -34,6 +37,7 @@ module speed_controller (
 
     assign o_update_en = update_en_w;
     assign o_finished  = (state_r == S_DONE);
+    assign o_show = (state_r == S_SHOW);
 
     // ===== Combinational Logic =====
     always_comb begin
@@ -54,7 +58,9 @@ module speed_controller (
             end
 
             S_RUN: begin
-                if (i_tick) begin
+                if (i_start) begin
+                    state_w = S_DONE;
+                end else if (i_tick) begin
                     if (tick_cnt_r >= current_threshold_r) begin
                         update_en_w = 1'b1;
                         tick_cnt_w  = 16'd0;
@@ -74,15 +80,23 @@ module speed_controller (
                     end
                 end
             end
-
             S_DONE: begin
                 if (i_start) begin
                     state_w             = S_RUN;
                     tick_cnt_w          = 16'd0;
                     current_threshold_w = INITIAL_DELAY;
                     update_count_w      = 8'd0;
+                end else if (i_show) begin
+                    state_w             = S_SHOW;
                 end
             end
+
+            S_SHOW: begin
+                if (i_show) begin
+                    state_w             = S_DONE;
+                end
+            end
+
         endcase
     end
 

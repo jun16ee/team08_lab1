@@ -2,6 +2,7 @@ module Top (
 	input        i_clk,
 	input        i_rst_n,
 	input        i_start,
+    input        i_show,
 	output [3:0] o_random_out
 );
 
@@ -9,7 +10,8 @@ module Top (
 logic tick_en;
 logic update_en;
 logic [15:0] time_seed;
-logic is_finished;
+logic done, show;
+logic [3:0] random_out_now, old_num;
 
 // ===== Sub-Module Instantiation =====
 clk_counter u_clk_counter (
@@ -23,9 +25,11 @@ speed_controller u_speed_controller (
     .i_clk       (i_clk),
     .i_rst_n     (i_rst_n),
     .i_start     (i_start),
+    .i_show      (i_show),
     .i_tick      (tick_en),
     .o_update_en (update_en),
-    .o_finished  (is_finished)
+    .o_finished  (done),
+    .o_show      (show)
 );
 
 lfsr_random_gen u_lfsr_random_gen (
@@ -34,8 +38,23 @@ lfsr_random_gen u_lfsr_random_gen (
     .i_en    (update_en),
     .i_load  (i_start),
     .i_seed  (time_seed),
-    .o_rand  (o_random_out)
+    .o_rand  (random_out_now)
 );
+
+assign o_random_out = show?old_num:random_out_now;
+
+logic done_r;
+always_ff @(posedge i_clk) begin
+    if (!i_rst_n) begin
+        old_num <= 18'd0;
+        done_r <= 1'b0;
+    end else begin
+        done_r <= done;
+        if (done_r & ~done) begin //falling edge
+            old_num <= random_out_now;
+        end
+    end
+end
 
 endmodule
 
