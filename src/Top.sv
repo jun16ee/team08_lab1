@@ -178,7 +178,7 @@ module lfsr_random_gen (
     // ===== Sequential Circuits =====
     always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
-            lfsr_r <= 4'h1; // 初始值設定
+            lfsr_r <= 4'h0; // 初始值設定
         end
         else begin
             // 只有在啟動或載入時才更新
