@@ -36,7 +36,7 @@ module speed_controller (
     parameter MAX_UPDATES   = 8'd30;
 
     assign o_update_en = update_en_w;
-    assign o_finished  = (state_r == S_DONE);
+    assign o_finished  = (state_r == S_DONE) | (state_r == S_SHOW);
     assign o_show = (state_r == S_SHOW);
 
     // ===== Combinational Logic =====
