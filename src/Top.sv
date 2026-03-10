@@ -11,7 +11,7 @@ logic tick_en;
 logic update_en;
 logic [15:0] time_seed;
 logic done, show;
-logic [3:0] random_out_now, old_num;
+logic [3:0] random_out_now;
 
 // ===== Sub-Module Instantiation =====
 clk_counter u_clk_counter (
@@ -41,21 +41,29 @@ lfsr_random_gen u_lfsr_random_gen (
     .o_rand  (random_out_now)
 );
 
-assign o_random_out = show?old_num:random_out_now;
 
-assign old_num = 4'b1010;
-// logic done_r;
-// always_ff @(posedge i_clk) begin
-//     if (!i_rst_n) begin
-//         old_num <= 18'd0;
-//         done_r <= 1'b0;
-//     end else begin
-//         done_r <= done;
-//         if (done_r & ~done) begin //falling edge
-//             old_num <= random_out_now;
-//         end
-//     end
-// end
+// assign old_num = 4'b1010;
+
+logic done_r;
+logic [3:0] old_num_r, current_num_r;
+
+assign o_random_out = show?old_num_r:current_num_r;
+always_ff @(posedge i_clk) begin
+    if (!i_rst_n) begin
+        current_num_r <= 4'd0;
+        old_num_r       <= 4'd0;
+        done_r <= 1'b0;
+    end else begin
+        done_r <= done;
+        if (~done_r & done) begin //rising edge
+            old_num_r     <= current_num_r;
+            current_num_r <= random_out_now;
+        end
+        // if (done) begin
+        //     old_num <= random_out_now;
+        // end
+    end
+end
 
 endmodule
 
