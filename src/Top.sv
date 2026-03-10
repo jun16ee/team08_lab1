@@ -11,7 +11,7 @@ logic tick_en;
 logic update_en;
 logic [15:0] time_seed;
 logic done, show;
-logic [3:0] random_out_now, old_num;
+logic [3:0] random_out_now, old_num, cur_num;
 
 // ===== Sub-Module Instantiation =====
 clk_counter u_clk_counter (
@@ -56,7 +56,8 @@ always_ff @(posedge i_clk) begin
         //     old_num <= random_out_now;
         // end
         if (done) begin
-            old_num <= random_out_now;
+            cur_num <= random_out_now;
+            old_num <= cur_num;
         end
     end
 end
