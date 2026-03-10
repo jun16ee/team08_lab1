@@ -120,7 +120,9 @@ module lfsr_random_gen (
             lfsr_r <= 16'hACE0;
         end
         else begin
-            lfsr_r <= lfsr_w;
+            if (i_en) begin
+                lfsr_r <= lfsr_w;
+            end
         end
     end
 
