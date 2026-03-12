@@ -12,8 +12,8 @@ logic update_en;
 logic [15:0] time_seed;
 logic run, done, show;
 logic [3:0] random_out_now;
-logic load;
-assign load = i_start & ~run & ~show;
+logic load_en;
+assign load_en = i_start & ~run & ~show;
 
 // ===== Sub-Module Instantiation =====
 clk_counter u_clk_counter (
@@ -39,7 +39,7 @@ lfsr_random_gen u_lfsr_random_gen (
     .i_clk   (i_clk),
     .i_rst_n (i_rst_n),
     .i_en    (update_en),
-    .i_load  (i_start),
+    .i_load  (load_en),
     .i_seed  (time_seed),
     .o_rand  (random_out_now)
 );
