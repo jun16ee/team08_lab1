@@ -10,8 +10,10 @@ module Top (
 logic tick_en;
 logic update_en;
 logic [15:0] time_seed;
-logic done, show;
+logic run, done, show;
 logic [3:0] random_out_now;
+logic load;
+assign load = i_start & ~run & ~show;
 
 // ===== Sub-Module Instantiation =====
 clk_counter u_clk_counter (
@@ -28,6 +30,7 @@ speed_controller u_speed_controller (
     .i_show      (i_show),
     .i_tick      (tick_en),
     .o_update_en (update_en),
+    .o_run       (run),
     .o_finished  (done),
     .o_show      (show)
 );
@@ -40,8 +43,6 @@ lfsr_random_gen u_lfsr_random_gen (
     .i_seed  (time_seed),
     .o_rand  (random_out_now)
 );
-
-assign o_random_out = show?old_num:random_out_now;
 
 // assign old_num = 4'b1010;
 logic [3:0] old_num, cur_num;
@@ -59,6 +60,8 @@ always_ff @(posedge i_clk) begin
         end
     end
 end
+
+assign o_random_out = show?old_num:random_out_now;
 
 endmodule
 

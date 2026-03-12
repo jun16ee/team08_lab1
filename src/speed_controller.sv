@@ -10,6 +10,7 @@ module speed_controller (
     input  logic i_show,
     input  logic i_tick,
     output logic o_update_en,
+    output logic o_run,
     output logic o_finished,
     output logic o_show
 );
@@ -36,6 +37,7 @@ module speed_controller (
     parameter MAX_UPDATES   = 8'd30;
 
     assign o_update_en = update_en_w;
+    assign o_run = (state_r == S_RUN);
     assign o_finished  = (state_r == S_DONE) | (state_r == S_SHOW);
     assign o_show = (state_r == S_SHOW);
 
