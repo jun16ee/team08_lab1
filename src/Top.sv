@@ -123,6 +123,7 @@ module lfsr_random_gen (
     always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
             lfsr_r <= 16'hACE0;
+            o_rand <= 4'h0;
         end
         else begin
             if (i_load || i_en) begin
