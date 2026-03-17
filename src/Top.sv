@@ -93,102 +93,104 @@ module clk_counter(
 
 endmodule
 
-// module lfsr_random_gen (
-//     input  logic        i_clk,
-//     input  logic        i_rst_n,
-//     input  logic        i_en,
-//     input  logic        i_load,
-//     input  logic [15:0] i_seed,
-//     output logic [3:0]  o_rand
-// );
-
-//     // 16-bit LFSR Register
-//     logic [15:0] lfsr_r, lfsr_w;
-
-//     assign o_rand = lfsr_r[3:0]; 
-
-//     // ===== Combinational Circuits =====
-//     always_comb begin
-//         lfsr_w = lfsr_r;
-        
-//         if (i_load) begin
-// 			// If seed is zero, use a default non-zero value to avoid getting stuck in the zero state
-//             lfsr_w = (i_seed == 16'd0) ? 16'hACE0 : i_seed;
-//         end
-//         else if (i_en) begin
-//             // Taps: 16, 14, 13, 11 (x^16 + x^14 + x^13 + x^11 + 1)
-//             lfsr_w = {lfsr_r[14:0], lfsr_r[15] ^ lfsr_r[13] ^ lfsr_r[12] ^ lfsr_r[10]};
-//         end
-//     end
-
-//     // ===== Sequential Circuits =====
-//     always_ff @(posedge i_clk or negedge i_rst_n) begin
-//         if (!i_rst_n) begin
-//             lfsr_r <= 16'hACE0;
-//         end
-//         else begin
-//             if (i_en) begin
-//                 lfsr_r <= lfsr_w;
-//             end
-//         end
-//     end
-
-// endmodule
-
 module lfsr_random_gen (
     input  logic        i_clk,
     input  logic        i_rst_n,
     input  logic        i_en,
     input  logic        i_load,
-    input  logic [3:0]  i_seed,
+    input  logic [15:0] i_seed,
     output logic [3:0]  o_rand
 );
 
-    // 4-bit LFSR Register
-    logic [3:0] lfsr_r, lfsr_w;
-    logic       feedback;
-
-    assign o_rand = lfsr_r; 
+    // 16-bit LFSR Register
+    logic [15:0] lfsr_r, lfsr_w;
 
     // ===== Combinational Circuits =====
     always_comb begin
         lfsr_w = lfsr_r;
         
-        // 1. 標準 Fibonacci 反饋邏輯 (x^4 + x^3 + 1)
-        // 這裡採用 XOR 邏輯
-        feedback = lfsr_r[3] ^ lfsr_r[2];
-
         if (i_load) begin
-            lfsr_w = i_seed;
+			// If seed is zero, use a default non-zero value to avoid getting stuck in the zero state
+            lfsr_w = (i_seed == 16'd0) ? 16'hACE0 : i_seed;
         end
         else if (i_en) begin
-            /* 為了達到 16 個狀態 (0~15)：
-               當目前的狀態為 4'b1000 時，下一步原本會進入 4'b0000 (原本被禁止的狀態)。
-               當目前的狀態為 4'b0000 時，下一步強制進入 4'b0001 (回到正常循環)。
-            */
-            if (lfsr_r == 4'b0000) begin
-                lfsr_w = 4'b0001; // 從全零狀態跳回循環
-            end
-            else if (lfsr_r == 4'b1000) begin
-                lfsr_w = 4'b0000; // 強制進入全零狀態
-            end
-            else begin
-                lfsr_w = {lfsr_r[2:0], feedback}; // 標準位移
-            end
+            // Taps: 16, 14, 13, 11 (x^16 + x^14 + x^13 + x^11 + 1)
+            lfsr_w = {lfsr_r[14:0], lfsr_r[15] ^ lfsr_r[13] ^ lfsr_r[12] ^ lfsr_r[10]};
         end
     end
 
     // ===== Sequential Circuits =====
     always_ff @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
-            lfsr_r <= 4'h0; // 初始值設定
+            lfsr_r <= 16'hACE0;
         end
         else begin
-            // 只有在啟動或載入時才更新
             if (i_load || i_en) begin
+                if (lfsr_w[3:0] == o_rand)
+                    o_rand <= lfsr_w[3:0] ^ 4'b0001;
+                else
+                    o_rand <= lfsr_w[3:0];
                 lfsr_r <= lfsr_w;
             end
         end
     end
 
 endmodule
+
+// module lfsr_random_gen (
+//     input  logic        i_clk,
+//     input  logic        i_rst_n,
+//     input  logic        i_en,
+//     input  logic        i_load,
+//     input  logic [3:0]  i_seed,
+//     output logic [3:0]  o_rand
+// );
+
+//     // 4-bit LFSR Register
+//     logic [3:0] lfsr_r, lfsr_w;
+//     logic       feedback;
+
+//     assign o_rand = lfsr_r; 
+
+//     // ===== Combinational Circuits =====
+//     always_comb begin
+//         lfsr_w = lfsr_r;
+        
+//         // 1. 標準 Fibonacci 反饋邏輯 (x^4 + x^3 + 1)
+//         // 這裡採用 XOR 邏輯
+//         feedback = lfsr_r[3] ^ lfsr_r[2];
+
+//         if (i_load) begin
+//             lfsr_w = i_seed;
+//         end
+//         else if (i_en) begin
+//             /* 為了達到 16 個狀態 (0~15)：
+//                當目前的狀態為 4'b1000 時，下一步原本會進入 4'b0000 (原本被禁止的狀態)。
+//                當目前的狀態為 4'b0000 時，下一步強制進入 4'b0001 (回到正常循環)。
+//             */
+//             if (lfsr_r == 4'b0000) begin
+//                 lfsr_w = 4'b0001; // 從全零狀態跳回循環
+//             end
+//             else if (lfsr_r == 4'b1000) begin
+//                 lfsr_w = 4'b0000; // 強制進入全零狀態
+//             end
+//             else begin
+//                 lfsr_w = {lfsr_r[2:0], feedback}; // 標準位移
+//             end
+//         end
+//     end
+
+//     // ===== Sequential Circuits =====
+//     always_ff @(posedge i_clk or negedge i_rst_n) begin
+//         if (!i_rst_n) begin
+//             lfsr_r <= 4'h0; // 初始值設定
+//         end
+//         else begin
+//             // 只有在啟動或載入時才更新
+//             if (i_load || i_en) begin
+//                 lfsr_r <= lfsr_w;
+//             end
+//         end
+//     end
+
+// endmodule
