@@ -32,9 +32,9 @@ module speed_controller (
     logic        update_en_w;
 
     // ===== Parameter Definitions =====
-    parameter INITIAL_DELAY = 16'd2;
-    parameter DELAY_STEP    = 16'd2;
-    parameter MAX_UPDATES   = 8'd20;
+    parameter INITIAL_DELAY = 16'd1;
+    parameter DELAY_STEP    = 16'd1;
+    parameter MAX_UPDATES   = 8'd18;
 
     assign o_update_en = update_en_w;
     assign o_run = (state_r == S_RUN);
